@@ -42,8 +42,9 @@ const char index_html[] PROGMEM = R"rawliteral(
   .container {
     position: relative;
     width: 90%;
-    max-width: 800px;
+    max-width: 700px;
     height: 400px;
+    margin-top: 20px;
     background-color: #ffffff;
     border: 1px solid rgb(51, 51, 51);
     border-radius: 10px;
@@ -124,79 +125,89 @@ const char index_html[] PROGMEM = R"rawliteral(
         document.getElementById("header").innerHTML = 'Connection OK'
         document.getElementById("header").style.backgroundColor = '#48ff00'
     }
+
     function onClose(event) {
         console.log('Connection closed');
         document.getElementById("header").innerHTML = 'Connection fail'
         document.getElementById("header").style.backgroundColor = '#ff2828'
         setTimeout(initWebSocket, 2000);
     }
+
     function onLoad(event) {
         initWebSocket();
     }
 
-    innerCircle1.addEventListener("mousedown", (event) => {
+    function send_msg(key, value) {
+      temp = key + ' = ' + value
+      console.log(temp);
+      websocket.send(temp);
+    }
+
+    function onStartX(event) {
       event.preventDefault();
-
-      const initialX = event.clientX;
-      const initialY = event.clientY;
-
-      const circleRect = innerCircle1.getBoundingClientRect();
+        
+      const circle = event.target;
+      const initialX = (event.type === "touchstart") ? event.touches[0].clientX : event.clientX;
+      const circleRect = circle.getBoundingClientRect();
       const circleOffsetX = initialX - circleRect.left;
-      const circleOffsetY = initialY - circleRect.top;
-
-      const containerRect = innerCircle1.parentElement.getBoundingClientRect();
-
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-
-      function onMouseMove(event) {
-        const newY = event.clientY - containerRect.top - circleOffsetY;
-        const maxY = containerRect.height - circleRect.height;
-        const clampedY = Math.min(Math.max(0, newY), maxY);
-        innerCircle1.style.top = clampedY + "px";
-        if(newY > 0 && newY < maxY){
-            temp = 'acelerator = ' + (100 - newY)
-            console.log(newY, maxY, temp);
-            websocket.send(temp);
-        }
-      }
-      function onMouseUp() {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        innerCircle1.style.left = "100px";
-        innerCircle1.style.top = "100px";
-        websocket.send('acelerator = ' + 0);
-      }
-    });
-    innerCircle2.addEventListener("mousedown", (event) => {
-      event.preventDefault();
-      const initialX = event.clientX;
-      const initialY = event.clientY;
-      const circleRect = innerCircle2.getBoundingClientRect();
-      const circleOffsetX = initialX - circleRect.left;
-      const circleOffsetY = initialY - circleRect.top;
-      const containerRect = innerCircle2.parentElement.getBoundingClientRect();
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-      function onMouseMove(event) {
-        const newX = event.clientX - containerRect.left - circleOffsetX;
+      const containerRect = circle.parentElement.getBoundingClientRect();
+        
+      document.addEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
+      document.addEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
+        
+      function onMove(event) {
+        const newX = ((event.type === "touchmove") ? event.touches[0].clientX : event.clientX) - containerRect.left - circleOffsetX;
         const maxX = containerRect.width - circleRect.width;
         const clampedX = Math.min(Math.max(0, newX), maxX);
-        innerCircle2.style.left = clampedX + "px";
+        circle.style.left = clampedX + "px";
         if(newX > 0 && newX < maxX) {
-            temp = 'direction = ' + (100 - newX)
-            console.log(newX, maxX, temp);
-            websocket.send(temp);
+          send_msg('direction', parseInt(100 - newX));
         }
       }
-      function onMouseUp() {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
+    
+      function onEnd() {
+        document.removeEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
+        document.removeEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
         innerCircle2.style.left = "100px";
-        innerCircle2.style.top = "100px";
-        websocket.send('direction = ' + 0);
+        send_msg('direction', 0)
       }
-    });
+    }
+
+    function onStartY(event) {
+      event.preventDefault();
+        
+      const circle = event.target;
+      const initialY = (event.type === "touchstart") ? event.touches[0].clientY : event.clientY;
+      const circleRect = circle.getBoundingClientRect();
+      const circleOffsetY = initialY - circleRect.top;
+      const containerRect = circle.parentElement.getBoundingClientRect();
+        
+      document.addEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
+      document.addEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
+        
+      function onMove(event) {
+        const newY = ((event.type === "touchmove") ? event.touches[0].clientY : event.clientY) - containerRect.top - circleOffsetY;
+        const maxY = containerRect.height - circleRect.height;
+        const clampedY = Math.min(Math.max(0, newY), maxY);      
+        circle.style.top = clampedY + "px";
+        if(newY > 0 && newY < maxY) {
+          send_msg('acelerator', parseInt(100 - newY));
+        }
+      }
+    
+      function onEnd() {
+        document.removeEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
+        document.removeEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
+        innerCircle1.style.top = "100px";
+        send_msg('acelerator', 0);
+      }
+    }
+    
+    innerCircle1.addEventListener("mousedown", onStartY);
+    innerCircle1.addEventListener("touchstart", onStartY);
+
+    innerCircle2.addEventListener("mousedown", onStartX);
+    innerCircle2.addEventListener("touchstart", onStartX);
   </script>
 </body>
 </html>
