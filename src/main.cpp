@@ -88,6 +88,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
 
   }
+
 </style>
 </head>
 <body>
@@ -96,10 +97,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         Conexão OK
     </div>
     <div class="circle-container">
-      <div class="outer-circle">
+      <div class="outer-circle" id="outerCircle1">
         <div class="inner-circle" id="innerCircle1"></div>
       </div>
-      <div class="outer-circle">
+      <div class="outer-circle" id="outerCircle2">
         <div class="inner-circle" id="innerCircle2"></div>
       </div>
     </div>
@@ -108,6 +109,8 @@ const char index_html[] PROGMEM = R"rawliteral(
   <script>
     const innerCircle1 = document.getElementById("innerCircle1");
     const innerCircle2 = document.getElementById("innerCircle2");
+    const outerCircle1 = document.getElementById("outerCircle1");
+    const outerCircle2 = document.getElementById("outerCircle2");
 
     var gateway = `ws://${window.location.hostname}/ws`;
     var websocket;
@@ -120,6 +123,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         websocket.onopen = onOpen;
         websocket.onclose = onClose;
     }
+
     function onOpen(event) {
         console.log('Connection opened');
         document.getElementById("header").innerHTML = 'Connection OK'
@@ -139,22 +143,22 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function send_msg(key, value) {
       temp = key + ' = ' + value
-      console.log(temp);
+      // console.log(temp);
       websocket.send(temp);
     }
 
     function onStartX(event) {
       event.preventDefault();
-        
-      const circle = event.target;
+
+      const circle = innerCircle2;
       const initialX = (event.type === "touchstart") ? event.touches[0].clientX : event.clientX;
       const circleRect = circle.getBoundingClientRect();
       const circleOffsetX = initialX - circleRect.left;
       const containerRect = circle.parentElement.getBoundingClientRect();
-        
+ 
       document.addEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
       document.addEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
-        
+
       function onMove(event) {
         const newX = ((event.type === "touchmove") ? event.touches[0].clientX : event.clientX) - containerRect.left - circleOffsetX;
         const maxX = containerRect.width - circleRect.width;
@@ -164,7 +168,7 @@ const char index_html[] PROGMEM = R"rawliteral(
           send_msg('direction', parseInt(100 - newX));
         }
       }
-    
+
       function onEnd() {
         document.removeEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
         document.removeEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
@@ -175,16 +179,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function onStartY(event) {
       event.preventDefault();
-        
-      const circle = event.target;
+
+      const circle = innerCircle1;
       const initialY = (event.type === "touchstart") ? event.touches[0].clientY : event.clientY;
       const circleRect = circle.getBoundingClientRect();
       const circleOffsetY = initialY - circleRect.top;
       const containerRect = circle.parentElement.getBoundingClientRect();
-        
+
       document.addEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
       document.addEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
-        
+
       function onMove(event) {
         const newY = ((event.type === "touchmove") ? event.touches[0].clientY : event.clientY) - containerRect.top - circleOffsetY;
         const maxY = containerRect.height - circleRect.height;
@@ -194,7 +198,7 @@ const char index_html[] PROGMEM = R"rawliteral(
           send_msg('acelerator', parseInt(100 - newY));
         }
       }
-    
+
       function onEnd() {
         document.removeEventListener((event.type === "touchstart") ? "touchmove" : "mousemove", onMove);
         document.removeEventListener((event.type === "touchstart") ? "touchend" : "mouseup", onEnd);
@@ -202,12 +206,12 @@ const char index_html[] PROGMEM = R"rawliteral(
         send_msg('acelerator', 0);
       }
     }
-    
-    innerCircle1.addEventListener("mousedown", onStartY);
-    innerCircle1.addEventListener("touchstart", onStartY);
 
-    innerCircle2.addEventListener("mousedown", onStartX);
-    innerCircle2.addEventListener("touchstart", onStartX);
+    outerCircle1.addEventListener("mousedown", onStartY);
+    outerCircle1.addEventListener("touchstart", onStartY);
+
+    outerCircle2.addEventListener("mousedown", onStartX);
+    outerCircle2.addEventListener("touchstart", onStartX);
   </script>
 </body>
 </html>
